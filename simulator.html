@@ -1,0 +1,2579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COVID-19 Disease Transmission Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            overflow-x: auto;
+        }
+
+        /* Header Styles */
+        .site-header {
+            background: #1a1a1a;
+            border-bottom: 3px solid #0084ff;
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .site-title {
+            color: #ffffff;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0;
+            text-decoration: none;
+        }
+
+        .site-title:hover {
+            color: #0084ff;
+            transition: color 0.3s;
+        }
+
+        .site-nav {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #ccc;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            color: #ffffff;
+            background: #2d2d2d;
+        }
+
+        .nav-link.active {
+            color: #0084ff;
+            background: #2d2d2d;
+        }
+
+        /* Modal Styles for About Page */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-content {
+            background-color: #2d2d2d;
+            margin: 5% auto;
+            padding: 30px;
+            border: 2px solid #0084ff;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 800px;
+            color: #ffffff;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #ccc;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #ffffff;
+        }
+
+        .modal h2 {
+            color: #0084ff;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #0084ff;
+            padding-bottom: 10px;
+        }
+
+        .modal h3 {
+            color: #ffffff;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        .modal p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: #ccc;
+        }
+
+        .modal ul {
+            color: #ccc;
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .modal li {
+            margin-bottom: 8px;
+        }
+
+        .top-panel {
+            background: #2d2d2d;
+            border-bottom: 2px solid #404040;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+
+        .environment-selector {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .environment-selector h2 {
+            color: #ffffff;
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+
+        .env-tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .env-tab {
+            padding: 12px 24px;
+            background: #404040;
+            border: none;
+            border-radius: 8px;
+            color: #ffffff;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .env-tab:hover {
+            background: #505050;
+        }
+
+        .env-tab.active {
+            background: #0084ff;
+            box-shadow: 0 0 10px rgba(0, 132, 255, 0.4);
+        }
+
+        .subtype-config {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .subtype-card {
+            background: #3d3d3d;
+            border: 2px solid #555;
+            border-radius: 8px;
+            padding: 12px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .subtype-card.selected {
+            border-color: #0084ff;
+            box-shadow: 0 0 15px rgba(0, 132, 255, 0.3);
+        }
+
+        .subtype-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .subtype-content {
+            flex: 1;
+        }
+
+        .subtype-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #ffffff;
+            margin-bottom: 3px;
+        }
+
+        .subtype-description {
+            color: #ccc;
+            font-size: 12px;
+            line-height: 1.3;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 120px);
+            gap: 20px;
+            padding: 0 20px;
+        }
+
+        .simulation-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .simulation-grid {
+            flex: 1;
+            display: grid;
+            gap: 15px;
+            max-height: 100%;
+            overflow: hidden;
+        }
+
+        .simulation-grid.one-panel {
+            grid-template-columns: 1fr;
+        }
+
+        .simulation-grid.multi-panels {
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+        }
+
+        .simulation-panel {
+            background: #2d2d2d;
+            border: 2px solid #404040;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .simulation-panel.active {
+            border-color: #0084ff;
+            box-shadow: 0 0 15px rgba(0, 132, 255, 0.3);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #555;
+        }
+
+        .panel-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #ffffff;
+        }
+
+        .panel-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: #404040;
+            color: #ccc;
+        }
+
+        .panel-status.running {
+            background: #0084ff;
+            color: #fff;
+        }
+
+        .simulation-canvas {
+            flex: 1;
+            background: #1a1a1a;
+            border: 1px solid #555;
+            border-radius: 8px;
+            min-height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .canvas-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #666;
+            font-size: 16px;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .simulation-params {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(45, 45, 45, 0.95);
+            border: 1px solid #555;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 11px;
+            color: #ccc;
+            min-width: 140px;
+            z-index: 10;
+            max-width: 160px;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .simulation-canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+        }
+
+        .param-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+
+        .param-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .param-label {
+            color: #aaa;
+        }
+
+        .param-value {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .param-value.high {
+            color: #51cf66;
+        }
+
+        .param-value.medium {
+            color: #ffa500;
+        }
+
+        .param-value.low {
+            color: #ff6b6b;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            width: 350px;
+            height: 100%;
+            gap: 15px;
+        }
+
+        .controls-panel {
+            background: #2d2d2d;
+            border: 2px solid #404040;
+            border-radius: 12px;
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        .results-button-container {
+            background: #2d2d2d;
+            border: 2px solid #404040;
+            border-radius: 12px;
+            padding: 15px;
+            flex-shrink: 0;
+        }
+
+        .results-toggle {
+            background: #0084ff;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(0, 132, 255, 0.3);
+        }
+
+        .results-toggle:hover {
+            background: #0066cc;
+            box-shadow: 0 6px 16px rgba(0, 132, 255, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .results-toggle.active {
+            background: #51cf66;
+        }
+
+        /* Results Modal Styles */
+        .results-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .results-modal-content {
+            background-color: #2d2d2d;
+            margin: 3% auto;
+            padding: 30px;
+            border: 2px solid #0084ff;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            color: #ffffff;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .results-modal .close {
+            color: #ccc;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .results-modal .close:hover {
+            color: #ffffff;
+        }
+
+        .controls-section {
+            margin-bottom: 25px;
+        }
+
+        .controls-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .controls-section h3 {
+            color: #ffffff;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #0084ff;
+            padding-bottom: 5px;
+        }
+
+        .assumption-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 5px 0;
+        }
+
+        .assumption-label {
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        .assumption-value {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .initial-data-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .data-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .data-input-label {
+            font-size: 14px;
+            color: #ccc;
+            font-weight: 600;
+        }
+
+        .data-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .data-slider {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #555;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .data-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #0084ff;
+            cursor: pointer;
+        }
+
+        .data-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #0084ff;
+            cursor: pointer;
+            border: none;
+        }
+
+        .data-value {
+            min-width: 60px;
+            text-align: right;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .intervention-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .intervention-btn {
+            padding: 8px 4px;
+            background: #404040;
+            border: 2px solid #555;
+            border-radius: 6px;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .intervention-btn:hover {
+            background: #505050;
+        }
+
+        .intervention-btn.active {
+            background: #0084ff;
+            border-color: #0084ff;
+            color: #fff;
+        }
+
+        .results-section {
+            background: #3d3d3d;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .result-label {
+            color: #ccc;
+        }
+
+        .result-value {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .result-value.exposed { color: #ffa500; }
+        .result-value.infectious { color: #ff6b6b; }
+        .result-value.recovered { color: #51cf66; }
+        .result-value.deaths { color: #ff4757; }
+
+        /* Updated Results Panel Styles */
+        .model-results {
+            background: #3d3d3d;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #0084ff;
+        }
+
+        .model-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #555;
+        }
+
+        .model-header h4 {
+            color: #0084ff;
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .model-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: #555;
+            color: #ccc;
+        }
+
+        .model-status.running {
+            background: #0084ff;
+            color: #fff;
+        }
+
+        .model-status.completed {
+            background: #51cf66;
+            color: #fff;
+        }
+
+        .simulation-stats {
+            margin-bottom: 15px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .stat-label {
+            color: #ccc;
+        }
+
+        .stat-value {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .mask-analysis h5,
+        .spread-analysis h5 {
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 10px;
+            margin-top: 15px;
+        }
+
+        .mask-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .mask-group {
+            background: #2d2d2d;
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .mask-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #fff;
+        }
+
+        .mask-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .mask-dot.masked {
+            background: #51cf66;
+        }
+
+        .mask-dot.unmasked {
+            background: #ff6b6b;
+        }
+
+        .mask-details {
+            margin-left: 16px;
+        }
+
+        .mask-stat {
+            font-size: 12px;
+            color: #ccc;
+            margin-bottom: 4px;
+        }
+
+        .spread-stats {
+            background: #2d2d2d;
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .comparison-section {
+            background: #3d3d3d;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            border-left: 4px solid #ffa500;
+        }
+
+        .comparison-section h4 {
+            color: #ffa500;
+            font-size: 16px;
+            margin: 0 0 15px 0;
+        }
+
+        .comparison-stats {
+            display: grid;
+            gap: 8px;
+        }
+
+        .comparison-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .comparison-label {
+            color: #ccc;
+        }
+
+        .comparison-value {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* Multi-model layout */
+        .results-modal.multi-models .model-results {
+            margin-bottom: 15px;
+        }
+
+        .results-modal.multi-models .model-results h4 {
+            font-size: 16px;
+        }
+
+        .results-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
+            margin-left: 8px;
+            transition: all 0.3s;
+        }
+
+        .results-indicator.has-data {
+            background: #51cf66;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .prevalence-bar {
+            width: 100%;
+            height: 20px;
+            background: #555;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .prevalence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffa500, #ff6b6b);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            flex: 1;
+            padding: 12px;
+            background: #404040;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .control-btn:hover {
+            background: #505050;
+        }
+
+        .control-btn.primary {
+            background: #0084ff;
+        }
+
+        .control-btn.primary:hover {
+            background: #0066cc;
+        }
+
+        .control-btn.danger {
+            background: #ff4757;
+        }
+
+        .control-btn.danger:hover {
+            background: #ff3742;
+        }
+
+                .control-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            background: #555;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #0084ff;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            transform: translateX(20px);
+        }
+
+        .toggle-label {
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        .control-disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .agent-legend {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.susceptible { background: #74c0fc; }
+        .legend-dot.exposed { background: #ffa500; }
+        .legend-dot.infectious { background: #ff6b6b; }
+        .legend-dot.recovered { background: #51cf66; }
+
+        @media (max-width: 1200px) {
+            .main-container {
+                flex-direction: column;
+            }
+            .right-panel {
+                width: 100%;
+                flex-direction: row;
+                gap: 15px;
+            }
+            .controls-panel {
+                flex: 2;
+            }
+            .results-button-container {
+                flex: 0 0 auto;
+                min-width: 150px;
+            }
+            .results-modal-content {
+                width: 95%;
+                margin: 5% auto;
+                padding: 20px;
+                max-height: 80vh;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .site-nav {
+                gap: 20px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 10% auto;
+                padding: 20px;
+            }
+            
+            .right-panel {
+                flex-direction: column;
+            }
+            .subtype-config {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <a href="#" class="site-title">COVID-19 Transmission Simulator</a>
+            <nav class="site-nav">
+                <a href="#" class="nav-link active">Simulator</a>
+                <a href="#" class="nav-link" id="aboutLink">About / Help</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- About Modal -->
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>About COVID-19 Transmission Simulator</h2>
+            
+            <h3>Overview</h3>
+            <p>This interactive simulation models disease transmission dynamics in various environments using agent-based modeling. It helps visualize how infectious diseases spread through populations and the effectiveness of different intervention strategies. All model data is based on real-life pandemic studies and statistics.</p>
+            
+            <h3>About Simulator</h3>
+            <p>This was created by Tarun Nandamudi, a Virginia Tech student studying Computer Science and Biomedical Engineering. After creating ABMs for my team's Introduction to Biomedical Engineering final project, I decided to take the project further and create a full simulation platform.</p>
+            
+            <h3>Features</h3>
+            <ul>
+                <li><strong>Multiple Environments:</strong> Schools, hospitals, offices, and transportation</li>
+                <li><strong>Customizable Parameters:</strong> Adjust transmission rates, incubation periods, and population size</li>
+                <li><strong>Intervention Modeling:</strong> Test isolation, social distancing, and contact tracing strategies</li>
+                <li><strong>Real-time Visualization:</strong> Watch disease spread in the model in real-time</li>
+                <li><strong>Comparative Analysis:</strong> Run up to 4 simulations simultaneously</li>
+            </ul>
+            
+            <h3>How to Use</h3>
+            <ul>
+                <li>Select an environment type (Schools, Hospitals, Offices, or Transport)</li>
+                <li>Choose one or more simulation scenarios to compare</li>
+                <li>Adjust initial parameters like population size and infection rates</li>
+                <li>Set intervention strategies to test their effectiveness</li>
+                <li>Click "Start" to begin the simulation</li>
+            </ul>
+            
+            <h3>Educational Purpose</h3>
+            <p>This simulator is designed for educational purposes to help understand epidemiological concepts and the impact of public health interventions. Results should not be used for actual policy decisions without proper epidemiological analysis.</p>
+            
+            <h3>Technical Details</h3>
+            <p>The simulation uses a ABM (Agent-Based Model) to model, given a specific environment and parameters. Each model runs throughout a timeframe, and explores how people become infected.</p>
+        </div>
+    </div>
+
+    <!-- Top Environment Selection Panel -->
+    <div class="top-panel">
+        <div class="environment-selector">
+            <h2>Model Environment:</h2>
+            <div class="env-tabs">
+                <button class="env-tab active" data-env="schools">🏫 Schools</button>
+                <button class="env-tab" data-env="hospitals">🏥 Hospitals</button>
+                <button class="env-tab" data-env="offices">🏢 Offices</button>
+                <button class="env-tab" data-env="transport">🚌 Transport</button>
+            </div>
+        </div>
+
+        <div class="subtype-config">
+            <div class="subtype-card" data-simulation="0">
+                <div class="subtype-header">
+                    <div class="subtype-content">
+                        <div class="subtype-title">Urban School</div>
+                        <div class="subtype-description">Higher density, better ventilation, 67% mask compliance</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subtype-card" data-simulation="1">
+                <div class="subtype-header">
+                    <div class="subtype-content">
+                        <div class="subtype-title">Suburban School</div>
+                        <div class="subtype-description">Medium density, moderate ventilation, 45% mask compliance</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subtype-card" data-simulation="2">
+                <div class="subtype-header">
+                    <div class="subtype-content">
+                        <div class="subtype-title">Rural School</div>
+                        <div class="subtype-description">Lower density, limited ventilation, 28% mask compliance</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Simulation Area -->
+    <div class="main-container">
+        <!-- Simulation Area -->
+        <div class="simulation-area">
+            <div class="simulation-grid one-panel" id="simulationGrid">
+                <div class="simulation-panel" data-sim-index="0">
+                    <div class="panel-header">
+                        <div class="panel-title">Select a simulation type</div>
+                        <div class="panel-status">INACTIVE</div>
+                    </div>
+                    <div class="simulation-canvas">
+                        <div class="canvas-placeholder">Select a simulation type to begin</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel with Controls and Results -->
+        <div class="right-panel">
+            <!-- Controls Panel -->
+            <!-- Dedicated Results Button Container -->
+            <div class="results-button-container">
+                <button class="results-toggle" id="resultsToggle">
+                    <span>📈 View Results</span>
+                    <span class="results-indicator" id="resultsIndicator"></span>
+                </button>
+            </div>
+            
+            <div class="controls-panel">
+                <div class="controls-section">
+                    <h3>🎮 Controls</h3>
+                    <div class="control-buttons">
+                        <button class="control-btn primary">▶️ Start</button>
+                        <button class="control-btn">⏸️ Pause</button>
+                        <button class="control-btn danger">🔄 Reset</button>
+                    </div>
+                </div>
+
+                <div class="controls-section">
+                    <h3>📊 Initial Data</h3>
+                    <div class="initial-data-grid">
+                        <div class="data-input-group">
+                            <div class="control-toggle">
+                                <div class="toggle-switch" data-control="agentCount"></div>
+                                <span class="toggle-label">Override Population</span>
+                            </div>
+                            <div class="data-input-label">Number of Agents</div>
+                            <div class="data-input control-disabled">
+                                <input type="range" class="data-slider" id="agentCount" min="15" max="200" value="28">
+                                <span class="data-value" id="agentCountValue">28</span>
+                            </div>
+                        </div>
+
+                        <div class="data-input-group">
+                            <div class="control-toggle">
+                                <div class="toggle-switch" data-control="initialInfected"></div>
+                                <span class="toggle-label">Override Initial Infected</span>
+                            </div>
+                            <div class="data-input-label">Initial Infected</div>
+                            <div class="data-input control-disabled">
+                                <input type="range" class="data-slider" id="initialInfected" min="1" max="20" value="3">
+                                <span class="data-value" id="initialInfectedValue">3</span>
+                            </div>
+                        </div>
+
+                        <div class="data-input-group">
+                            <div class="control-toggle">
+                                <div class="toggle-switch" data-control="transmissionRate"></div>
+                                <span class="toggle-label">Override Transmission</span>
+                            </div>
+                            <div class="data-input-label">Transmission Rate (R₀)</div>
+                            <div class="data-input control-disabled">
+                                <input type="range" class="data-slider" id="transmissionRate" min="0.5" max="5.0" step="0.1" value="2.5">
+                                <span class="data-value" id="transmissionRateValue">2.5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="controls-section">
+                    <h3>🛡️ Interventions</h3>
+                    
+                    <div class="data-input-group">
+                        <div class="control-toggle">
+                            <div class="toggle-switch" data-control="masking"></div>
+                            <span class="toggle-label">Override Masking</span>
+                        </div>
+                        <div class="data-input-label">
+                            <span>Masking Rate</span>
+                            <span id="isolationValue">0%</span>
+                        </div>
+                        <div class="intervention-grid control-disabled">
+                            <div class="intervention-btn active" data-value="0">0%</div>
+                            <div class="intervention-btn" data-value="25">25%</div>
+                            <div class="intervention-btn" data-value="50">50%</div>
+                            <div class="intervention-btn" data-value="75">75%</div>
+                            <div class="intervention-btn" data-value="100">100%</div>
+                        </div>
+                    </div>
+
+                    <div class="data-input-group">
+                        <div class="control-toggle">
+                            <div class="toggle-switch" data-control="distancing"></div>
+                            <span class="toggle-label">Override Social Distancing</span>
+                        </div>
+                        <div class="data-input-label">
+                            <span>Social Distancing</span>
+                            <span id="distancingValue">25%</span>
+                        </div>
+                        <div class="intervention-grid control-disabled">
+                            <div class="intervention-btn" data-value="0">0 ft</div>
+                            <div class="intervention-btn active" data-value="25">1 ft</div>
+                            <div class="intervention-btn" data-value="50">3 ft</div>
+                            <div class="intervention-btn" data-value="75">6 ft</div>
+                            <div class="intervention-btn" data-value="100">9 ft</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="agent-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #74c0fc;"></div>
+                        <span>Masked - Susceptible</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #ffa500;"></div>
+                        <span>Masked - Infected</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #ff6b6b;"></div>
+                        <span>No Mask - Susceptible</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #51cf66;"></div>
+                        <span>No Mask - Infected</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Modal -->
+    <div id="resultsModal" class="results-modal">
+        <div class="results-modal-content" id="resultsModalContent">
+            <span class="close" id="resultsModalClose">&times;</span>
+            <h2>📈 Simulation Results</h2>
+            <div id="resultsContainer">
+                <!-- Results content will be populated here dynamically -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedSimulations = new Set(); // Start with empty selection
+        const maxSelections = 4;
+        let currentEnvironment = 'schools'; // Track current environment
+
+        // Environment names for different environments
+        const environmentTypes = {
+            schools: ['Urban School', 'Suburban School', 'Rural School'],
+            hospitals: ['General Hospital', 'ICU Ward', 'Emergency Room'],
+            offices: ['Open Office', 'Cubicle Office', 'Private Offices'],
+            transport: ['City Bus', 'Subway Car', 'Airplane']
+        };
+
+        // MATLAB Algorithm Translation - Complete CovidSimulation Class
+        class CovidSimulation {
+            constructor(environmentIndex, canvasElement) {
+                this.canvas = canvasElement;
+                this.ctx = this.canvas.getContext('2d');
+
+                // Set canvas size based on container
+                const container = this.canvas.parentElement;
+                if (container) {
+                    const containerRect = container.getBoundingClientRect();
+                    this.canvas.width = Math.max(400, containerRect.width - 30);
+                    this.canvas.height = Math.max(300, containerRect.height - 30);
+                }
+                this.isRunning = false;
+                this.isPaused = false;
+                
+                // Map environment selection to demographic keys
+                const envMapping = {
+                    'schools': ['urban', 'suburban', 'rural'],
+                    'hospitals': ['general', 'icu', 'emergency'], 
+                    'offices': ['open', 'cubicle', 'private'],
+                    'transport': ['bus', 'subway', 'airplane']
+                };
+                
+                this.environmentKey = envMapping[currentEnvironment][environmentIndex];
+                
+                // Simulation parameters
+                this.baseAreaSize = 150;
+                this.totalTime = 730;
+                this.dt = 1;
+                this.currentTime = 0;
+                
+                // Germ parameters
+                this.germSpeed = 1;
+                this.germSpreadRate = 5;
+                
+                // Environment demographics with scientific parameters
+                this.environmentDemographics = {
+                    // Schools
+                    urban: {
+                        populationSize: 28, maskCompliance: 0.67, roomSizeFactor: 1.0,
+                        airChangeRate: 6.0, hepaPresent: true, windowVentilation: 0.539,
+                        baseVentilationStrength: 0.8, ventilationRadius: 30, germMaxLifespan: 40,
+                        transmissionModifier: 1.0, densityFactor: 1.0
+                    },
+                    suburban: {
+                        populationSize: 25, maskCompliance: 0.45, roomSizeFactor: 1.1,
+                        airChangeRate: 4.5, hepaPresent: false, windowVentilation: 0.635,
+                        baseVentilationStrength: 0.6, ventilationRadius: 25, germMaxLifespan: 60,
+                        transmissionModifier: 1.2, densityFactor: 0.9
+                    },
+                    rural: {
+                        populationSize: 20, maskCompliance: 0.28, roomSizeFactor: 1.2,
+                        airChangeRate: 3.0, hepaPresent: false, windowVentilation: 0.735,
+                        baseVentilationStrength: 0.4, ventilationRadius: 15, germMaxLifespan: 80,
+                        transmissionModifier: 1.5, densityFactor: 0.7
+                    },
+                    // Hospitals
+                    general: {
+                        populationSize: 35, maskCompliance: 0.85, roomSizeFactor: 1.3,
+                        airChangeRate: 12.0, hepaPresent: true, windowVentilation: 0.2,
+                        baseVentilationStrength: 0.9, ventilationRadius: 40, germMaxLifespan: 25,
+                        transmissionModifier: 0.7, densityFactor: 1.4
+                    },
+                    icu: {
+                        populationSize: 15, maskCompliance: 0.98, roomSizeFactor: 0.8,
+                        airChangeRate: 15.0, hepaPresent: true, windowVentilation: 0.0,
+                        baseVentilationStrength: 1.0, ventilationRadius: 50, germMaxLifespan: 15,
+                        transmissionModifier: 0.4, densityFactor: 2.0
+                    },
+                    emergency: {
+                        populationSize: 45, maskCompliance: 0.75, roomSizeFactor: 1.5,
+                        airChangeRate: 8.0, hepaPresent: true, windowVentilation: 0.3,
+                        baseVentilationStrength: 0.8, ventilationRadius: 35, germMaxLifespan: 35,
+                        transmissionModifier: 1.1, densityFactor: 1.8
+                    },
+                    // Offices
+                    open: {
+                        populationSize: 40, maskCompliance: 0.35, roomSizeFactor: 2.0,
+                        airChangeRate: 2.5, hepaPresent: false, windowVentilation: 0.4,
+                        baseVentilationStrength: 0.3, ventilationRadius: 20, germMaxLifespan: 120,
+                        transmissionModifier: 1.8, densityFactor: 0.8
+                    },
+                    cubicle: {
+                        populationSize: 30, maskCompliance: 0.45, roomSizeFactor: 1.5,
+                        airChangeRate: 3.5, hepaPresent: false, windowVentilation: 0.5,
+                        baseVentilationStrength: 0.4, ventilationRadius: 25, germMaxLifespan: 100,
+                        transmissionModifier: 1.4, densityFactor: 1.0
+                    },
+                    private: {
+                        populationSize: 8, maskCompliance: 0.25, roomSizeFactor: 0.6,
+                        airChangeRate: 2.0, hepaPresent: false, windowVentilation: 0.6,
+                        baseVentilationStrength: 0.2, ventilationRadius: 15, germMaxLifespan: 150,
+                        transmissionModifier: 0.8, densityFactor: 0.5
+                    },
+                    // Transport
+                    bus: {
+                        populationSize: 35, maskCompliance: 0.60, roomSizeFactor: 0.9,
+                        airChangeRate: 8.0, hepaPresent: false, windowVentilation: 0.7,
+                        baseVentilationStrength: 0.6, ventilationRadius: 20, germMaxLifespan: 45,
+                        transmissionModifier: 1.6, densityFactor: 2.5
+                    },
+                    subway: {
+                        populationSize: 50, maskCompliance: 0.75, roomSizeFactor: 1.1,
+                        airChangeRate: 10.0, hepaPresent: false, windowVentilation: 0.1,
+                        baseVentilationStrength: 0.7, ventilationRadius: 25, germMaxLifespan: 40,
+                        transmissionModifier: 2.0, densityFactor: 3.0
+                    },
+                    airplane: {
+                        populationSize: 180, maskCompliance: 0.90, roomSizeFactor: 3.0,
+                        airChangeRate: 20.0, hepaPresent: true, windowVentilation: 0.0,
+                        baseVentilationStrength: 1.2, ventilationRadius: 60, germMaxLifespan: 20,
+                        transmissionModifier: 0.6, densityFactor: 4.0
+                    }
+                };
+                
+                this.initializeSimulation();
+            }
+            
+            initializeSimulation() {
+                const demographics = this.environmentDemographics[this.environmentKey];
+                this.studentNum = demographics.populationSize;
+                this.areaSize = this.baseAreaSize * demographics.roomSizeFactor;
+                this.maskRate = demographics.maskCompliance;
+                
+                // Environment-specific parameters
+                this.hepaPresent = demographics.hepaPresent;
+                this.windowVentilation = demographics.windowVentilation;
+                this.baseVentilationStrength = demographics.baseVentilationStrength;
+                this.ventilationRadius = demographics.ventilationRadius;
+                this.germMaxLifespan = demographics.germMaxLifespan;
+                this.airChangeRate = demographics.airChangeRate;
+                this.transmissionModifier = demographics.transmissionModifier;
+                this.densityFactor = demographics.densityFactor;
+                
+                this.ventilationStrength = this.baseVentilationStrength * 
+                    (this.hepaPresent * 0.5 + this.windowVentilation * 0.5);
+                this.ventilationRemovalRate = (this.ventilationStrength * this.airChangeRate / 10) * 0.2;
+                
+                // Environment density effects
+                const environmentDensity = (this.studentNum * this.densityFactor) / (this.areaSize * this.areaSize);
+                this.germSpreadRate = Math.round(this.germSpreadRate * this.transmissionModifier * (1 + environmentDensity));
+                
+                // Statistics tracking
+                this.timeToFirstNewInfection = -1;
+                this.infectionHistory = [];
+                this.maskedInfectionHistory = [];
+                this.unmaskedInfectionHistory = [];
+                this.infectionRate = [];
+                
+                // Student properties
+                this.studentLocation = [];
+                this.studentMasked = [];
+                this.studentInfected = [];
+                this.studentTarget = [];
+                this.studentSpeed = 0.5;
+                
+                this.initialInfected = Math.max(1, Math.round(this.studentNum * 0.1));
+                
+                // Environment-specific mask effectiveness
+                const maskEffectivenessMap = {
+                    general: 0.85, icu: 0.95, emergency: 0.80,
+                    bus: 0.65, subway: 0.70, airplane: 0.85
+                };
+                this.maskNeutralizeRate = maskEffectivenessMap[this.environmentKey] || 0.7;
+                
+                // Apply UI control values
+                this.applyUIParameters();
+                this.initializeStudents();
+                
+                // Germ properties
+                this.germsPerWave = 5;
+                this.waveInterval = 50;
+                this.lastWaveTime = 0;
+                
+                this.germLocation = [];
+                this.germTarget = [];
+                this.germInteractions = [];
+                this.germSource = [];
+                this.germAge = [];
+                
+                this.createInitialGerms();
+            }
+            
+            initializeStudents() {
+                for (let i = 0; i < this.studentNum; i++) {
+                    this.studentLocation.push(this.placeCell());
+                    this.studentTarget.push([
+                        Math.random() * 2 * this.areaSize - this.areaSize,
+                        Math.random() * 2 * this.areaSize - this.areaSize
+                    ]);
+                    this.studentInfected.push(0);
+                }
+                
+                const totalMaskedStudents = Math.round(this.studentNum * this.maskRate);
+                this.studentMasked = new Array(this.studentNum).fill(0);
+                for (let i = 0; i < totalMaskedStudents; i++) {
+                    this.studentMasked[i] = 1;
+                }
+                
+                for (let i = this.studentMasked.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [this.studentMasked[i], this.studentMasked[j]] = [this.studentMasked[j], this.studentMasked[i]];
+                }
+                
+                const infectedIndices = this.randomSelection(this.studentNum, this.initialInfected);
+                infectedIndices.forEach(index => {
+                    this.studentInfected[index] = 1;
+                });
+            }
+            
+            createInitialGerms() {
+                for (let i = 0; i < this.studentNum; i++) {
+                    if (this.studentInfected[i]) {
+                        for (let j = 0; j < this.germsPerWave; j++) {
+                            const newGermPos = [
+                                this.studentLocation[i][0] + Math.random() * 10 - 5,
+                                this.studentLocation[i][1] + Math.random() * 10 - 5
+                            ];
+                            this.germLocation.push(newGermPos);
+                            this.germTarget.push(Math.floor(Math.random() * this.studentNum));
+                            this.germInteractions.push(0);
+                            this.germSource.push(i);
+                            this.germAge.push(0);
+                        }
+                    }
+                }
+            }
+            
+            placeCell() {
+                return [
+                    Math.random() * 2 * this.areaSize - this.areaSize,
+                    Math.random() * 2 * this.areaSize - this.areaSize
+                ];
+            }
+            
+            computeDistance(point1, point2) {
+                return Math.sqrt(
+                    Math.pow(point1[0] - point2[0], 2) + 
+                    Math.pow(point1[1] - point2[1], 2)
+                );
+            }
+            
+            computeAngle(point1, point2) {
+                return Math.atan2(point2[1] - point1[1], point2[0] - point1[0]);
+            }
+            
+            randomSelection(total, count) {
+                const indices = [];
+                while (indices.length < count) {
+                    const index = Math.floor(Math.random() * total);
+                    if (!indices.includes(index)) {
+                        indices.push(index);
+                    }
+                }
+                return indices;
+            }
+            
+            updateStudents() {
+                for (let student = 0; student < this.studentNum; student++) {
+                    if (this.computeDistance(this.studentLocation[student], this.studentTarget[student]) < 1 || 
+                        Math.random() < 0.05) {
+                        this.studentTarget[student] = [
+                            Math.random() * 2 * this.areaSize - this.areaSize,
+                            Math.random() * 2 * this.areaSize - this.areaSize
+                        ];
+                    }
+                    
+                    const angleToTarget = this.computeAngle(this.studentLocation[student], this.studentTarget[student]);
+                    let newPos = [
+                        this.studentLocation[student][0] + Math.cos(angleToTarget) * this.studentSpeed,
+                        this.studentLocation[student][1] + Math.sin(angleToTarget) * this.studentSpeed
+                    ];
+                    
+                    newPos[0] = Math.max(Math.min(newPos[0], this.areaSize), -this.areaSize);
+                    newPos[1] = Math.max(Math.min(newPos[1], this.areaSize), -this.areaSize);
+                    
+                    this.studentLocation[student] = newPos;
+                }
+            }
+            
+            createGermWave() {
+                if (this.currentTime - this.lastWaveTime >= this.waveInterval) {
+                    this.lastWaveTime = this.currentTime;
+                    for (let i = 0; i < this.studentNum; i++) {
+                        if (this.studentInfected[i]) {
+                            for (let j = 0; j < this.germsPerWave; j++) {
+                                const newGermPos = [
+                                    this.studentLocation[i][0] + Math.random() * 10 - 5,
+                                    this.studentLocation[i][1] + Math.random() * 10 - 5
+                                ];
+                                this.germLocation.push(newGermPos);
+                                this.germTarget.push(Math.floor(Math.random() * this.studentNum));
+                                this.germInteractions.push(0);
+                                this.germSource.push(i);
+                                this.germAge.push(0);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            updateGerms() {
+                const germIndicesToRemove = [];
+                
+                for (let germ = 0; germ < this.germLocation.length; germ++) {
+                    this.germAge[germ]++;
+                    
+                    if (this.germAge[germ] >= this.germMaxLifespan) {
+                        germIndicesToRemove.push(germ);
+                        continue;
+                    }
+                    
+                    const distToWall = Math.min(
+                        this.areaSize - Math.abs(this.germLocation[germ][0]),
+                        this.areaSize - Math.abs(this.germLocation[germ][1])
+                    );
+                    
+                    if (distToWall < this.ventilationRadius) {
+                        if (Math.random() < this.ventilationRemovalRate) {
+                            germIndicesToRemove.push(germ);
+                            continue;
+                        }
+                    }
+                    
+                    const targetStudent = this.germTarget[germ];
+                    const distanceToStudent = this.computeDistance(
+                        this.germLocation[germ], 
+                        this.studentLocation[targetStudent]
+                    );
+                    const angleToStudent = this.computeAngle(
+                        this.germLocation[germ], 
+                        this.studentLocation[targetStudent]
+                    );
+                    
+                    this.germLocation[germ] = [
+                        this.germLocation[germ][0] + Math.cos(angleToStudent) * this.germSpeed,
+                        this.germLocation[germ][1] + Math.sin(angleToStudent) * this.germSpeed
+                    ];
+                    
+                    if (distanceToStudent <= 1) {
+                        this.germInteractions[germ]++;
+                        
+                        if (!this.studentInfected[targetStudent]) {
+                            if (this.studentMasked[targetStudent]) {
+                                if (Math.random() > this.maskNeutralizeRate) {
+                                    this.studentInfected[targetStudent] = 1;
+                                }
+                            } else {
+                                this.studentInfected[targetStudent] = 1;
+                            }
+                        }
+                        
+                        germIndicesToRemove.push(germ);
+                    }
+                }
+                
+                for (let i = germIndicesToRemove.length - 1; i >= 0; i--) {
+                    const index = germIndicesToRemove[i];
+                    this.germLocation.splice(index, 1);
+                    this.germTarget.splice(index, 1);
+                    this.germInteractions.splice(index, 1);
+                    this.germSource.splice(index, 1);
+                    this.germAge.splice(index, 1);
+                }
+            }
+            
+            updateStatistics() {
+                const currentInfected = this.studentInfected.reduce((sum, infected) => sum + infected, 0);
+                const currentMaskedInfected = this.studentInfected.reduce((sum, infected, i) => 
+                    sum + (infected && this.studentMasked[i] ? 1 : 0), 0);
+                const currentUnmaskedInfected = this.studentInfected.reduce((sum, infected, i) => 
+                    sum + (infected && !this.studentMasked[i] ? 1 : 0), 0);
+                
+                this.infectionHistory.push(currentInfected);
+                this.maskedInfectionHistory.push(currentMaskedInfected);
+                this.unmaskedInfectionHistory.push(currentUnmaskedInfected);
+                
+                if (this.infectionHistory.length > 1) {
+                    const newInfections = currentInfected - this.infectionHistory[this.infectionHistory.length - 2];
+                    this.infectionRate.push(newInfections);
+                } else {
+                    this.infectionRate.push(0);
+                }
+                
+                if (this.timeToFirstNewInfection === -1 && currentInfected > this.initialInfected) {
+                    this.timeToFirstNewInfection = this.currentTime;
+                }
+            }
+            
+            getDisplayParameters() {
+                const demographics = this.environmentDemographics[this.environmentKey];
+                
+                // Check which controls are overridden
+                const agentToggle = document.querySelector('[data-control="agentCount"]')?.classList.contains('active');
+                const maskingToggle = document.querySelector('[data-control="masking"]')?.classList.contains('active');
+                const transmissionToggle = document.querySelector('[data-control="transmissionRate"]')?.classList.contains('active');
+                
+                const getValueCategory = (value, thresholds, inverse = false) => {
+                    if (inverse) {
+                        if (value >= thresholds.high) return 'low';
+                        if (value >= thresholds.medium) return 'medium';
+                        return 'high';
+                    } else {
+                        if (value >= thresholds.high) return 'high';
+                        if (value >= thresholds.medium) return 'medium';
+                        return 'low';
+                    }
+                };
+                
+                const populationValue = agentToggle ? 
+                    parseInt(document.getElementById('agentCount').value) : 
+                    demographics.populationSize;
+                    
+                const maskValue = maskingToggle ? 
+                    (parseInt(document.querySelector('.intervention-grid .intervention-btn.active').dataset.value) / 100) : 
+                    demographics.maskCompliance;
+                
+                return [
+                    {
+                        label: 'Population',
+                        value: populationValue + (agentToggle ? '*' : ''),
+                        category: getValueCategory(populationValue, {high: 40, medium: 25})
+                    },
+                    {
+                        label: 'Air Changes/hr',
+                        value: demographics.airChangeRate.toFixed(1),
+                        category: getValueCategory(demographics.airChangeRate, {high: 10, medium: 5})
+                    },
+                    {
+                        label: 'Mask Rate',
+                        value: (maskValue * 100).toFixed(0) + '%' + (maskingToggle ? '*' : ''),
+                        category: getValueCategory(maskValue, {high: 0.7, medium: 0.5})
+                    },
+                    {
+                        label: 'HEPA Filter',
+                        value: demographics.hepaPresent ? 'Yes' : 'No',
+                        category: demographics.hepaPresent ? 'high' : 'low'
+                    },
+                    {
+                        label: 'Transmission',
+                        value: demographics.transmissionModifier.toFixed(1) + 'x' + (transmissionToggle ? '*' : ''),
+                        category: getValueCategory(demographics.transmissionModifier, {high: 1.5, medium: 1.0}, true)
+                    },
+                    {
+                        label: 'Germ Lifespan',
+                        value: demographics.germMaxLifespan + ' steps',
+                        category: getValueCategory(demographics.germMaxLifespan, {high: 80, medium: 40}, true)
+                    }
+                ];
+            }
+
+            getUIParameters() {
+                return {
+                    agentCount: parseInt(document.getElementById('agentCount').value),
+                    initialInfected: parseInt(document.getElementById('initialInfected').value),
+                    incubationPeriod: parseInt(document.getElementById('incubationPeriod').value),
+                    transmissionRate: parseFloat(document.getElementById('transmissionRate').value),
+                    susceptibility: parseInt(document.getElementById('susceptibility').value) / 100,
+                    maskingRate: parseInt(document.querySelector('.intervention-grid .intervention-btn.active').dataset.value) / 100,
+                    socialDistancing: parseInt(document.querySelectorAll('.intervention-grid')[1].querySelector('.intervention-btn.active').dataset.value) / 100
+                };
+            }
+            
+            applyUIParameters() {
+                const demographics = this.environmentDemographics[this.environmentKey];
+                
+                // Only apply UI values if their toggles are active
+                const agentToggle = document.querySelector('[data-control="agentCount"]');
+                const infectedToggle = document.querySelector('[data-control="initialInfected"]');
+                const transmissionToggle = document.querySelector('[data-control="transmissionRate"]');
+                const maskingToggle = document.querySelector('[data-control="masking"]');
+                const distancingToggle = document.querySelector('[data-control="distancing"]');
+                
+                // Population
+                if (agentToggle && agentToggle.classList.contains('active')) {
+                    this.studentNum = parseInt(document.getElementById('agentCount').value);
+                } else {
+                    this.studentNum = demographics.populationSize;
+                }
+                
+                // Initial infected
+                if (infectedToggle && infectedToggle.classList.contains('active')) {
+                    this.initialInfected = parseInt(document.getElementById('initialInfected').value);
+                } else {
+                    this.initialInfected = Math.max(1, Math.round(this.studentNum * 0.1));
+                }
+                
+                // Masking rate
+                if (maskingToggle && maskingToggle.classList.contains('active')) {
+                    this.maskRate = parseInt(document.querySelector('.intervention-grid .intervention-btn.active').dataset.value) / 100;
+                } else {
+                    this.maskRate = demographics.maskCompliance;
+                }
+                
+                // Transmission modifier
+                if (transmissionToggle && transmissionToggle.classList.contains('active')) {
+                    const uiRate = parseFloat(document.getElementById('transmissionRate').value);
+                    this.transmissionModifier = demographics.transmissionModifier * (uiRate / 2.5);
+                } else {
+                    this.transmissionModifier = demographics.transmissionModifier;
+                }
+                
+                // Social distancing (affects movement speed)
+                if (distancingToggle && distancingToggle.classList.contains('active')) {
+                    const distancing = parseInt(document.querySelectorAll('.intervention-grid')[1].querySelector('.intervention-btn.active').dataset.value) / 100;
+                    this.studentSpeed = 0.5 * (1 - distancing * 0.5);
+                } else {
+                    this.studentSpeed = 0.5;
+                }
+                
+                // Reinitialize with new parameters
+                this.initializeStudents();
+                this.createInitialGerms();
+            }
+            
+            draw() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                const scaleX = this.canvas.width / (2 * this.areaSize);
+                const scaleY = this.canvas.height / (2 * this.areaSize);
+                const scale = Math.min(scaleX, scaleY) * 0.9;
+                
+                const offsetX = this.canvas.width / 2;
+                const offsetY = this.canvas.height / 2;
+                
+                this.ctx.fillStyle = 'rgba(200, 200, 255, 0.2)';
+                this.ctx.fillRect(
+                    offsetX - this.areaSize * scale,
+                    offsetY - this.areaSize * scale,
+                    2 * this.areaSize * scale,
+                    2 * this.areaSize * scale
+                );
+                
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+                const ventArea = this.areaSize - this.ventilationRadius;
+                this.ctx.fillRect(
+                    offsetX - ventArea * scale,
+                    offsetY - ventArea * scale,
+                    2 * ventArea * scale,
+                    2 * ventArea * scale
+                );
+                
+                for (let i = 0; i < this.studentNum; i++) {
+                    const x = offsetX + this.studentLocation[i][0] * scale;
+                    const y = offsetY + this.studentLocation[i][1] * scale;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                    
+                    // New color scheme: Blue=Masked Susceptible, Orange=Masked Infected, Red=Unmasked Susceptible, Green=Unmasked Infected
+                    if (this.studentInfected[i]) {
+                        if (this.studentMasked[i]) {
+                            this.ctx.fillStyle = '#ffa500'; // Orange - Masked Infected
+                        } else {
+                            this.ctx.fillStyle = '#51cf66'; // Green - No Mask Infected
+                        }
+                    } else {
+                        if (this.studentMasked[i]) {
+                            this.ctx.fillStyle = '#74c0fc'; // Blue - Masked Susceptible
+                        } else {
+                            this.ctx.fillStyle = '#ff6b6b'; // Red - No Mask Susceptible
+                        }
+                    }
+                    
+                    this.ctx.fill();
+                }
+                
+                this.ctx.fillStyle = '#ff6b6b';
+                for (let i = 0; i < this.germLocation.length; i++) {
+                    const x = offsetX + this.germLocation[i][0] * scale;
+                    const y = offsetY + this.germLocation[i][1] * scale;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(x, y, 1, 0, 2 * Math.PI);
+                    this.ctx.fill();
+                }
+            }
+            
+            step() {
+                if (!this.isRunning || this.isPaused) return;
+                
+                this.updateStudents();
+                this.createGermWave();
+                this.updateGerms();
+                this.updateStatistics();
+                this.draw();
+                
+                this.currentTime += this.dt;
+                
+                if (this.currentTime >= this.totalTime || 
+                    this.infectionHistory[this.infectionHistory.length - 1] === this.studentNum) {
+                    this.stop();
+                }
+            }
+            
+            start() {
+                this.isRunning = true;
+                this.isPaused = false;
+                this.animate();
+            }
+
+            isVisible() {
+                return this.canvas && 
+                    this.canvas.parentElement && 
+                    this.canvas.parentElement.style.display !== 'none' &&
+                    this.canvas.offsetWidth > 0 && 
+                    this.canvas.offsetHeight > 0;
+            }
+            
+            pause() {
+                this.isPaused = !this.isPaused;
+            }
+            
+            stop() {
+                this.isRunning = false;
+                this.isPaused = false;
+            }
+            
+            reset() {
+                this.stop();
+                this.currentTime = 0;
+                this.initializeSimulation();
+                this.draw();
+            }
+            
+            animate() {
+                if (this.isRunning && this.isVisible()) {
+                    this.step();
+                    setTimeout(() => this.animate(), 100);
+                } else if (this.isRunning) {
+                    // If running but not visible, keep checking
+                    setTimeout(() => this.animate(), 500);
+                }
+            }
+            
+            getResults() {
+                const currentInfected = this.infectionHistory[this.infectionHistory.length - 1] || 0;
+                const currentMaskedInfected = this.maskedInfectionHistory[this.maskedInfectionHistory.length - 1] || 0;
+                const currentUnmaskedInfected = this.unmaskedInfectionHistory[this.unmaskedInfectionHistory.length - 1] || 0;
+                const totalMasked = this.studentMasked.reduce((sum, masked) => sum + masked, 0);
+                const totalUnmasked = this.studentNum - totalMasked;
+                
+                const averageRate = this.infectionRate.length > 0 ? 
+                    (currentInfected - this.initialInfected) / this.currentTime : 0;
+                const maxRate = this.infectionRate.length > 0 ? Math.max(...this.infectionRate) : 0;
+                
+                return {
+                    duration: this.currentTime,
+                    totalInfected: currentInfected,
+                    totalStudents: this.studentNum,
+                    infectionPercentage: (currentInfected / this.studentNum * 100).toFixed(1),
+                    maskedInfected: currentMaskedInfected,
+                    unmaskedInfected: currentUnmaskedInfected,
+                    totalMasked: totalMasked,
+                    totalUnmasked: totalUnmasked,
+                    maskedInfectionRate: totalMasked > 0 ? (currentMaskedInfected / totalMasked * 100).toFixed(1) : 0,
+                    unmaskedInfectionRate: totalUnmasked > 0 ? (currentUnmaskedInfected / totalUnmasked * 100).toFixed(1) : 0,
+                    timeToFirstNewInfection: this.timeToFirstNewInfection,
+                    averageInfectionRate: averageRate.toFixed(2),
+                    peakInfectionRate: maxRate.toFixed(2)
+                };
+            }
+        }
+        
+        let activeSimulations = new Map(); // Track running simulations
+
+        // Environment switching functionality
+        document.querySelectorAll('.env-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Only proceed if it's a different environment
+                if (tab.dataset.env !== currentEnvironment) {
+                    document.querySelectorAll('.env-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Stop and clear all running simulations
+                    activeSimulations.forEach(sim => {
+                        sim.stop();
+                    });
+                    activeSimulations.clear();
+                    
+                    // Clear selections when switching environments
+                    selectedSimulations.clear();
+                    
+                    // Update current environment
+                    currentEnvironment = tab.dataset.env;
+                    
+                    updateEnvironmentContent(currentEnvironment);
+                }
+            });
+        });
+
+        // Simulation type selection (checkbox behavior)
+        document.querySelectorAll('.subtype-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const simulationIndex = parseInt(card.dataset.simulation);
+                
+                if (selectedSimulations.has(simulationIndex)) {
+                    // Deselect if already selected - stop and remove simulation
+                    selectedSimulations.delete(simulationIndex);
+                    card.classList.remove('selected');
+                    
+                    if (activeSimulations.has(simulationIndex)) {
+                        activeSimulations.get(simulationIndex).stop();
+                        activeSimulations.delete(simulationIndex);
+                    }
+                } else if (selectedSimulations.size < maxSelections) {
+                    // Select if under limit
+                    selectedSimulations.add(simulationIndex);
+                    card.classList.add('selected');
+                }
+                
+                updateSimulationDisplay();
+            });
+        });
+
+        // Intervention button functionality
+        document.querySelectorAll('.intervention-grid').forEach(grid => {
+            const buttons = grid.querySelectorAll('.intervention-btn');
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    buttons.forEach(b => b.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    const parentGroup = button.closest('.data-input-group');
+                    const valueSpan = parentGroup.querySelector('[id$="Value"]');
+                    if (valueSpan) {
+                        valueSpan.textContent = button.dataset.value + '%';
+                    }
+                });
+            });
+        });
+
+        // Slider input handling
+        document.querySelectorAll('.data-slider').forEach(slider => {
+            slider.addEventListener('input', (e) => {
+                const valueSpan = document.getElementById(e.target.id + 'Value');
+                let value = e.target.value;
+                
+                if (e.target.id === 'susceptibility') {
+                    value += '%';
+                }
+                
+                valueSpan.textContent = value;
+            });
+        });
+
+        // Toggle switch functionality
+        document.querySelectorAll('.toggle-switch').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const controlName = toggle.dataset.control;
+                const isActive = toggle.classList.contains('active');
+                
+                if (isActive) {
+                    // Deactivate override
+                    toggle.classList.remove('active');
+                    const controlGroup = toggle.closest('.data-input-group');
+                    const dataInput = controlGroup.querySelector('.data-input, .intervention-grid');
+                    dataInput.classList.add('control-disabled');
+                } else {
+                    // Activate override
+                    toggle.classList.add('active');
+                    const controlGroup = toggle.closest('.data-input-group');
+                    const dataInput = controlGroup.querySelector('.data-input, .intervention-grid');
+                    dataInput.classList.remove('control-disabled');
+                }
+                
+                // Update parameter displays for all selected simulations
+                updateAllParameterDisplays();
+            });
+        });
+
+        // Update parameter displays when sliders change
+        document.querySelectorAll('.data-slider').forEach(slider => {
+            slider.addEventListener('input', (e) => {
+                const valueSpan = document.getElementById(e.target.id + 'Value');
+                let value = e.target.value;
+                
+                if (e.target.id === 'susceptibility') {
+                    value += '%';
+                }
+                
+                valueSpan.textContent = value;
+                
+                // Update parameter displays if this control is active
+                const controlName = e.target.id;
+                const toggle = document.querySelector(`[data-control="${controlName}"]`);
+                if (toggle && toggle.classList.contains('active')) {
+                    updateAllParameterDisplays();
+                }
+            });
+        });
+
+        // Update parameter displays when intervention buttons change
+        document.querySelectorAll('.intervention-grid').forEach(grid => {
+            const buttons = grid.querySelectorAll('.intervention-btn');
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    buttons.forEach(b => b.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    const parentGroup = button.closest('.data-input-group');
+                    const valueSpan = parentGroup.querySelector('[id$="Value"]');
+                    if (valueSpan) {
+                        valueSpan.textContent = button.dataset.value + '%';
+                    }
+                    
+                    // Update parameter displays if masking or distancing override is active
+                    const maskingToggle = document.querySelector('[data-control="masking"]');
+                    const distancingToggle = document.querySelector('[data-control="distancing"]');
+                    
+                    if ((maskingToggle && maskingToggle.classList.contains('active')) ||
+                        (distancingToggle && distancingToggle.classList.contains('active'))) {
+                        updateAllParameterDisplays();
+                    }
+                });
+            });
+        });
+
+        // Control buttons
+        document.querySelector('.control-btn.primary').addEventListener('click', () => {
+            selectedSimulations.forEach(simIndex => {
+                const panel = document.querySelector(`[data-sim-index="${simIndex}"]`);
+                if (panel) {
+                    const canvas = panel.querySelector('.simulation-canvas');
+                    const statusElement = panel.querySelector('.panel-status');
+                    const placeholder = panel.querySelector('.canvas-placeholder');
+                    
+                    if (canvas && canvas.tagName === 'CANVAS') {
+                        // Hide placeholder text
+                        if (placeholder) {
+                            placeholder.style.display = 'none';
+                        }
+                        
+                        // Always create new simulation with current UI parameters
+                        if (activeSimulations.has(simIndex)) {
+                            activeSimulations.get(simIndex).stop();
+                        }
+                        
+                        const simulation = new CovidSimulation(simIndex, canvas);
+                        activeSimulations.set(simIndex, simulation);
+                        simulation.start();
+                        
+                        statusElement.textContent = 'RUNNING';
+                        statusElement.classList.add('running');
+                    }
+                }
+            });
+        });
+
+        document.querySelectorAll('.control-btn')[1].addEventListener('click', () => {
+            activeSimulations.forEach(simulation => {
+                simulation.pause();
+                const panels = document.querySelectorAll('.simulation-panel.active');
+                panels.forEach(panel => {
+                    const statusElement = panel.querySelector('.panel-status');
+                    statusElement.textContent = simulation.isPaused ? 'PAUSED' : 'RUNNING';
+                });
+            });
+        });
+
+        document.querySelector('.control-btn.danger').addEventListener('click', () => {
+            // Stop and clear all simulations
+            activeSimulations.forEach((simulation, simIndex) => {
+                simulation.stop();
+            });
+            activeSimulations.clear();
+            
+            // Clear all selections
+            selectedSimulations.clear();
+            
+            // Remove selected state from all cards
+            document.querySelectorAll('.subtype-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Update display to show empty state
+            updateSimulationDisplay();
+            
+            // Reset results indicator
+            updateResultsIndicator(false);
+            
+            // Reset all control sliders to default values
+            document.getElementById('agentCount').value = 28;
+            document.getElementById('agentCountValue').textContent = '28';
+            document.getElementById('initialInfected').value = 3;
+            document.getElementById('initialInfectedValue').textContent = '3';
+            document.getElementById('incubationPeriod').value = 5;
+            document.getElementById('incubationPeriodValue').textContent = '5';
+            document.getElementById('transmissionRate').value = 2.5;
+            document.getElementById('transmissionRateValue').textContent = '2.5';
+            document.getElementById('susceptibility').value = 69;
+            document.getElementById('susceptibilityValue').textContent = '69%';
+            
+            // Reset intervention buttons
+            document.querySelectorAll('.intervention-grid').forEach((grid, index) => {
+                const buttons = grid.querySelectorAll('.intervention-btn');
+                buttons.forEach(btn => btn.classList.remove('active'));
+                
+                if (index === 0) {
+                    // Reset masking to 0%
+                    buttons[0].classList.add('active');
+                    document.getElementById('isolationValue').textContent = '0%';
+                } else {
+                    // Reset social distancing to 25% (1 ft)
+                    buttons[1].classList.add('active');
+                    document.getElementById('distancingValue').textContent = '25%';
+                }
+            });
+        });
+
+        function updateEnvironmentContent(environment) {
+            const environments = {
+                schools: {
+                    types: [
+                        {title: 'Urban School', desc: 'Higher density, better ventilation, 67% mask compliance'},
+                        {title: 'Suburban School', desc: 'Medium density, moderate ventilation, 45% mask compliance'},
+                        {title: 'Rural School', desc: 'Lower density, limited ventilation, 28% mask compliance'}
+                    ]
+                },
+                hospitals: {
+                    types: [
+                        {title: 'General Hospital', desc: 'Standard ward with moderate PPE usage'},
+                        {title: 'ICU Ward', desc: 'High-risk area with maximum protective equipment'},
+                        {title: 'Emergency Room', desc: 'High turnover with variable protection levels'}
+                    ]
+                },
+                offices: {
+                    types: [
+                        {title: 'Open Office', desc: 'Large shared workspace with minimal barriers'},
+                        {title: 'Cubicle Office', desc: 'Partitioned workspaces with moderate separation'},
+                        {title: 'Private Offices', desc: 'Individual rooms with controlled access'}
+                    ]
+                },
+                transport: {
+                    types: [
+                        {title: 'City Bus', desc: 'Public transit with moderate ventilation'},
+                        {title: 'Subway Car', desc: 'Underground transit with recycled air'},
+                        {title: 'Airplane', desc: 'Commercial flight with HEPA filtration'}
+                    ]
+                }
+            };
+
+            const envData = environments[environment];
+            const cards = document.querySelectorAll('.subtype-card');
+            
+            // Update card content and clear selections
+            cards.forEach((card, index) => {
+                if (index < envData.types.length) {
+                    const title = card.querySelector('.subtype-title');
+                    const desc = card.querySelector('.subtype-description');
+                    
+                    title.textContent = envData.types[index].title;
+                    desc.textContent = envData.types[index].desc;
+                    
+                    // Remove selected state from all cards
+                    card.classList.remove('selected');
+                }
+            });
+
+            // Update simulation display after environment change
+            updateSimulationDisplay();
+        }
+
+        function updateSimulationDisplay() {
+            const grid = document.getElementById('simulationGrid');
+            const selectedArray = Array.from(selectedSimulations).sort();
+            const envTypes = environmentTypes[currentEnvironment];
+            
+            // Clear existing panels
+            grid.innerHTML = '';
+            
+            // Update grid class based on number of selected simulations
+            grid.className = 'simulation-grid';
+            if (selectedArray.length === 1) {
+                grid.classList.add('one-panel');
+            } else if (selectedArray.length > 1) {
+                grid.classList.add('multi-panels');
+            }
+            
+            // Create panels for selected simulations
+            selectedArray.forEach((simIndex, arrayIndex) => {
+                const panel = document.createElement('div');
+                panel.className = 'simulation-panel active';
+                panel.setAttribute('data-sim-index', simIndex);
+                
+                const title = envTypes[simIndex] || `Simulation ${simIndex + 1}`;
+                
+                panel.innerHTML = `
+                    <div class="panel-header">
+                        <div class="panel-title">${title}</div>
+                        <div class="panel-status">READY</div>
+                    </div>
+                    <div class="canvas-container">
+                        <canvas class="simulation-canvas"></canvas>
+                        <div class="canvas-placeholder" id="placeholder-${simIndex}">Click Start to begin simulation</div>
+                        <div class="simulation-params" id="params-${simIndex}">
+                            <!-- Parameters will be updated dynamically -->
+                        </div>
+                    </div>
+                `;
+
+                // Set canvas size and update parameters after DOM is ready
+                const canvas = panel.querySelector('.simulation-canvas');
+                const container = panel.querySelector('.canvas-container');
+
+                // Use setTimeout to ensure DOM is fully rendered
+                setTimeout(() => {
+                    const containerRect = container.getBoundingClientRect();
+                    canvas.width = Math.max(400, containerRect.width - 30);
+                    canvas.height = Math.max(300, containerRect.height - 30);
+                    
+                    // Update parameters display after DOM is ready
+                    updateParameterDisplay(simIndex);
+                }, 0);
+                
+                grid.appendChild(panel);
+            });
+            
+            // If we have 2 or 3 simulations, add empty panels to complete the 2x2 grid
+            if (selectedArray.length === 2 || selectedArray.length === 3) {
+                const emptyPanelsNeeded = 4 - selectedArray.length;
+                for (let i = 0; i < emptyPanelsNeeded; i++) {
+                    const emptyPanel = document.createElement('div');
+                    emptyPanel.className = 'simulation-panel';
+                    emptyPanel.innerHTML = `
+                        <div class="panel-header">
+                            <div class="panel-title">Available Slot</div>
+                            <div class="panel-status">EMPTY</div>
+                        </div>
+                        <div class="simulation-canvas">
+                            <div class="canvas-placeholder">Select additional simulation types</div>
+                        </div>
+                    `;
+                    grid.appendChild(emptyPanel);
+                }
+            }
+            
+            // If no simulations selected, show placeholder
+            // If no simulations selected, show placeholder
+            if (selectedArray.length === 0) {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'simulation-panel';
+                placeholder.innerHTML = `
+                    <div class="panel-header">
+                        <div class="panel-title">No Simulation Selected</div>
+                        <div class="panel-status">INACTIVE</div>
+                    </div>
+                    <div class="canvas-container">
+                        <div class="canvas-placeholder" style="display: block;">
+                            Select a simulation type to begin
+                        </div>
+                    </div>
+                `;
+                grid.classList.add('one-panel');
+                grid.appendChild(placeholder);
+            }
+
+            // Update results panel
+            updateResultsPanel(selectedArray, currentEnvironment, envTypes);
+        }
+
+        function updateParameterDisplay(simIndex) {
+            const paramElement = document.getElementById(`params-${simIndex}`);
+            if (!paramElement) {
+                // Retry after a short delay if element not found
+                setTimeout(() => updateParameterDisplay(simIndex), 100);
+                return;
+            }
+            
+            try {
+                // Create temporary simulation to get current parameters
+                const tempCanvas = document.createElement('canvas');
+                const tempSim = new CovidSimulation(simIndex, tempCanvas);
+                const params = tempSim.getDisplayParameters();
+                
+                const paramHtml = params.map(param => 
+                    `<div class="param-row">
+                        <span class="param-label">${param.label}:</span>
+                        <span class="param-value ${param.category}">${param.value}</span>
+                    </div>`
+                ).join('');
+                
+                paramElement.innerHTML = paramHtml;
+            } catch (error) {
+                console.warn('Failed to update parameter display for simulation', simIndex, error);
+                // Fallback: show basic info
+                paramElement.innerHTML = '<div class="param-row"><span class="param-label">Loading...</span></div>';
+            }
+        }
+        
+        function updateAllParameterDisplays() {
+            selectedSimulations.forEach(simIndex => {
+                updateParameterDisplay(simIndex);
+            });
+        }
+
+        function updateResultsPanel(selectedArray, activeEnv, envTypes) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const resultsModal = document.getElementById('resultsModal');
+            
+            // Clear existing results
+            resultsContainer.innerHTML = '';
+            
+            if (selectedArray.length === 0) {
+                // No simulations selected
+                resultsContainer.innerHTML = `
+                    <div class="model-results">
+                        <div class="model-header">
+                            <h4>No Model Selected</h4>
+                            <div class="model-status">Inactive</div>
+                        </div>
+                        <p style="color: #666; text-align: center; padding: 20px;">
+                            Select a simulation type to view results
+                        </p>
+                    </div>
+                `;
+                resultsModal.classList.remove('multi-models');
+            } else {
+                // Create results for each selected simulation
+                selectedArray.forEach((simIndex, arrayIndex) => {
+                    const title = envTypes[simIndex] || `Simulation ${simIndex + 1}`;
+                    const modelNumber = arrayIndex + 1;
+                    
+                    const modelResult = document.createElement('div');
+                    modelResult.className = 'model-results';
+                    modelResult.setAttribute('data-model', simIndex);
+                    
+                    modelResult.innerHTML = `
+                        <div class="model-header">
+                            <h4>${title} - Model ${modelNumber}</h4>
+                            <div class="model-status">Not Started</div>
+                        </div>
+                        
+                        <div class="simulation-stats">
+                            <div class="stat-row">
+                                <span class="stat-label">Duration:</span>
+                                <span class="stat-value">0 time steps</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-label">Total Infected:</span>
+                                <span class="stat-value">3 of 28 (10.7%)</span>
+                            </div>
+                        </div>
+
+                        <div class="mask-analysis">
+                            <h5>📊 Mask Analysis</h5>
+                            <div class="mask-stats-grid">
+                                <div class="mask-group">
+                                    <div class="mask-header">
+                                        <span class="mask-dot masked"></span>
+                                        <span>Masked (0 students)</span>
+                                    </div>
+                                    <div class="mask-details">
+                                        <div class="mask-stat">
+                                            <span>Infected: 0 (0.0%)</span>
+                                        </div>
+                                        <div class="mask-stat">
+                                            <span>Uninfected: 0 (0.0%)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mask-group">
+                                    <div class="mask-header">
+                                        <span class="mask-dot unmasked"></span>
+                                        <span>Unmasked (28 students)</span>
+                                    </div>
+                                    <div class="mask-details">
+                                        <div class="mask-stat">
+                                            <span>Infected: 3 (10.7%)</span>
+                                        </div>
+                                        <div class="mask-stat">
+                                            <span>Uninfected: 25 (89.3%)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="spread-analysis">
+                            <h5>📈 Spread Analysis</h5>
+                            <div class="spread-stats">
+                                <div class="stat-row">
+                                    <span class="stat-label">First New Infection:</span>
+                                    <span class="stat-value">-- steps</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Avg. Infection Rate:</span>
+                                    <span class="stat-value">0.00 cases/step</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Peak Infection Rate:</span>
+                                    <span class="stat-value">0.00 cases/step</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    resultsContainer.appendChild(modelResult);
+                });
+
+                // Add comparison section if multiple models
+                if (selectedArray.length > 1) {
+                    const comparisonDiv = document.createElement('div');
+                    comparisonDiv.id = 'comparisonSection';
+                    comparisonDiv.className = 'comparison-section';
+                    comparisonDiv.innerHTML = `
+                        <h4>🔄 Model Comparison</h4>
+                        <div class="comparison-stats">
+                            <div class="comparison-metric">
+                                <span class="comparison-label">Most Effective (Lowest Infection Rate):</span>
+                                <span class="comparison-value">Run simulation to compare</span>
+                            </div>
+                            <div class="comparison-metric">
+                                <span class="comparison-label">Mask Effectiveness Difference:</span>
+                                <span class="comparison-value">-- percentage points</span>
+                            </div>
+                            <div class="comparison-metric">
+                                <span class="comparison-label">Fastest Spread:</span>
+                                <span class="comparison-value">-- steps to peak</span>
+                            </div>
+                            <div class="comparison-metric">
+                                <span class="comparison-label">Models Being Compared:</span>
+                                <span class="comparison-value">${selectedArray.length} active models</span>
+                            </div>
+                        </div>
+                    `;
+                    resultsContainer.appendChild(comparisonDiv);
+                    resultsModal.classList.add('multi-models');
+                } else {
+                    resultsModal.classList.remove('multi-models');
+                }
+            }
+        }
+
+        // Initialize the interface with schools environment
+        updateEnvironmentContent('schools');
+
+        // Results modal functionality
+        const resultsToggle = document.getElementById('resultsToggle');
+        const resultsModal = document.getElementById('resultsModal');
+        const resultsModalClose = document.getElementById('resultsModalClose');
+        const resultsIndicator = document.getElementById('resultsIndicator');
+
+        resultsToggle.addEventListener('click', () => {
+            resultsModal.style.display = 'block';
+        });
+
+        resultsModalClose.addEventListener('click', () => {
+            resultsModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === resultsModal) {
+                resultsModal.style.display = 'none';
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && resultsModal.style.display === 'block') {
+                resultsModal.style.display = 'none';
+            }
+        });
+
+        // Function to indicate when results have data
+        function updateResultsIndicator(hasData = false) {
+            const indicator = document.querySelector('.results-indicator');
+            if (hasData) {
+                indicator.classList.add('has-data');
+            } else {
+                indicator.classList.remove('has-data');
+            }
+        }
+
+        // About modal functionality
+        const aboutModal = document.getElementById('aboutModal');
+        const aboutLink = document.getElementById('aboutLink');
+        const closeBtn = document.querySelector('.close');
+
+        if (aboutLink && aboutModal && closeBtn) {
+            aboutLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                aboutModal.style.display = 'block';
+            });
+
+            closeBtn.addEventListener('click', () => {
+                aboutModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (e) => {
+                if (e.target === aboutModal) {
+                    aboutModal.style.display = 'none';
+                }
+            });
+
+            // Close modal with Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && aboutModal.style.display === 'block') {
+                    aboutModal.style.display = 'none';
+                }
+            });
+        }
+
+        // Navigation link highlighting
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                if (link.id !== 'aboutLink') {
+                    e.preventDefault();
+                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
